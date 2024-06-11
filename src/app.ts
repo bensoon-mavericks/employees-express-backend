@@ -4,6 +4,8 @@ import employeeRoutes from "./routes/employees";
 import { json } from "body-parser";
 import { CustomError } from "./models/ErrorResponse";
 
+import { sequelize } from "./connection";
+
 const app = express();
 
 app.use(json());
@@ -11,10 +13,6 @@ app.use(json());
 app.use("/employees", employeeRoutes);
 
 app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
-  //   console.log(err);
-  //   console.log(Object.getPrototypeOf(err));
-  //   console.log(Object.getPrototypeOf(Object.getPrototypeOf(err)));
-
   if (err instanceof CustomError) {
     const { statusCode, errors, logging } = err;
     return res.status(statusCode).send({ errors });
@@ -22,4 +20,12 @@ app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
   res.status(500).json({ message: err.message });
 });
 
-app.listen(8080, () => console.log("running on 8080"));
+(async () => {
+  try {
+    await sequelize.sync();
+    app.listen(8080, () => console.log("running on 8080"));
+  } catch (error) {
+    console.error(error);
+    process.exit(1);
+  }
+})();
