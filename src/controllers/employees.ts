@@ -24,7 +24,7 @@ export const CreateEmployee: RequestHandler = async (req, res, next) => {
 
   const { error, value } = schema.validate(employeeReq);
   if (error !== undefined) {
-    throw new BadRequestError({ code: 400, message: error.message });
+    return next(new BadRequestError({ code: 400, message: error.message }));
   }
   const employeeId = Math.round(Math.random() * 100);
 
@@ -48,43 +48,47 @@ export const GetEmployee: RequestHandler<{ emp_id: number }> = async (
   const employeeId = +req.params.emp_id;
   const employee = await Employee.findByPk(employeeId);
   if (employee === null) {
-    throw new NotFoundError({ code: 404 }); // TODO: return NOT FOUND
+    return next(new NotFoundError({ code: 404 })); // TODO: return NOT FOUND
   }
   res.json({ description: "successful operation", schema: employee });
 };
 
-export const UpdateEmployee: RequestHandler<{ emp_id: number }> = (
+export const UpdateEmployee: RequestHandler<{ emp_id: number }> = async (
   req,
   res,
   next
 ) => {
   const employeeId = +req.params.emp_id;
-  const employeeIndex = EMPLOYEES.findIndex((e) => e.id === employeeId);
   const updateEmployeeReq = req.body as EmployeeRequest;
   const { error, value } = schema.validate(updateEmployeeReq);
   if (error !== undefined) {
-    throw new BadRequestError({ code: 400, message: error.message });
+    return next(new BadRequestError({ code: 400, message: error.message }));
   }
-  EMPLOYEES[employeeIndex] = new EmployeeDef(
-    EMPLOYEES[employeeIndex].id,
-    updateEmployeeReq.name,
-    updateEmployeeReq.salary,
-    updateEmployeeReq.department
-  );
+  let employee = await Employee.findByPk(employeeId);
+  if (employee === null) {
+    return next(new NotFoundError({ code: 404 }));
+  }
+  employee.name = updateEmployeeReq.name;
+  employee.salary = updateEmployeeReq.salary;
+  employee.department = updateEmployeeReq.department;
+  await employee.save();
   res.json({
     description: "successful operation",
-    schema: EMPLOYEES[employeeIndex],
+    schema: employee,
   });
 };
 
-export const DeleteEmployee: RequestHandler<{ emp_id: number }> = (
+export const DeleteEmployee: RequestHandler<{ emp_id: number }> = async (
   req,
   res,
   next
 ) => {
   const employeeId = +req.params.emp_id;
-  const employeeIndex = EMPLOYEES.findIndex((e) => e.id === employeeId);
-  EMPLOYEES.splice(employeeIndex, 1);
+  let employee = await Employee.findByPk(employeeId);
+  if (employee === null) {
+    return next(new NotFoundError({ code: 404 }));
+  }
+  await employee.destroy();
   res.status(204).json({ message: "successful Delete operation!" });
 };
 
