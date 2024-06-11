@@ -9,7 +9,7 @@ export const sequelize = new Sequelize({
   password: "mypass",
   database: "employee_sequelize",
   logging: false,
-  models: [__dirname + "/models/**/*.model.ts"],
+  models: [Employee],
   modelMatch: (filename, member) => {
     return (
       filename.substring(0, filename.indexOf(".model")) === member.toLowerCase()

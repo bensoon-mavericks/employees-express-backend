@@ -1,14 +1,17 @@
 import { RequestHandler } from "express";
 import { EmployeeDef } from "../models/EmployeeDef";
+import { Employee } from "../models/Employee";
 import { EmployeeRequest } from "../models/EmployeeRequest";
 import { nextTick } from "process";
-import BadRequestError from "../models/ErrorResponse";
+import { BadRequestError, NotFoundError } from "../models/ErrorResponse";
 import Joi from "joi";
+import { error } from "console";
 
 const EMPLOYEES: EmployeeDef[] = [];
 
-export const GetAllEmployee: RequestHandler = (req, res, next) => {
-  res.json(EMPLOYEES);
+export const GetAllEmployee: RequestHandler = async (req, res, next) => {
+  const employees = await Employee.findAll();
+  res.json(employees);
 };
 
 // TODO: error handling for bad request
@@ -16,7 +19,7 @@ export const GetAllEmployee: RequestHandler = (req, res, next) => {
 // invalid salary (negative or zero salary)
 // missing fields
 // invalid request structure
-export const CreateEmployee: RequestHandler = (req, res, next) => {
+export const CreateEmployee: RequestHandler = async (req, res, next) => {
   const employeeReq = req.body;
 
   const { error, value } = schema.validate(employeeReq);
@@ -24,29 +27,30 @@ export const CreateEmployee: RequestHandler = (req, res, next) => {
     throw new BadRequestError({ code: 400, message: error.message });
   }
   const employeeId = Math.round(Math.random() * 100);
-  const employeeDef = new EmployeeDef(
-    employeeId,
-    employeeReq.name,
-    employeeReq.salary,
-    employeeReq.department
-  );
-  EMPLOYEES.push(employeeDef);
+
+  let employee = await Employee.create({
+    id: employeeId,
+    name: employeeReq.name,
+    salary: employeeReq.salary,
+    department: employeeReq.department,
+  });
+
   res
     .status(201)
-    .json({ description: "successful operation", schema: employeeDef });
+    .json({ description: "successful operation", schema: employee });
 };
 
-export const GetEmployee: RequestHandler<{ emp_id: number }> = (
+export const GetEmployee: RequestHandler<{ emp_id: number }> = async (
   req,
   res,
   next
 ) => {
   const employeeId = +req.params.emp_id;
-  const employeeDef = EMPLOYEES.filter((e) => e.id === employeeId);
-  if (employeeDef.length === 0) {
-    throw new Error("Not Found"); // TODO: return NOT FOUND
+  const employee = await Employee.findByPk(employeeId);
+  if (employee === null) {
+    throw new NotFoundError({ code: 404 }); // TODO: return NOT FOUND
   }
-  res.json({ description: "successful operation", schema: employeeDef });
+  res.json({ description: "successful operation", schema: employee });
 };
 
 export const UpdateEmployee: RequestHandler<{ emp_id: number }> = (

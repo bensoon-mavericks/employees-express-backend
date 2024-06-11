@@ -21,11 +21,7 @@ app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
 });
 
 (async () => {
-  try {
-    await sequelize.sync();
-    app.listen(8080, () => console.log("running on 8080"));
-  } catch (error) {
-    console.error(error);
-    process.exit(1);
-  }
+  await sequelize.sync({ force: true });
 })();
+
+app.listen(8080, () => console.log("running on 8080"));

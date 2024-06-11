@@ -1,7 +1,10 @@
-import { Model, Column, Table } from "sequelize-typescript";
+import { Model, Column, Table, PrimaryKey } from "sequelize-typescript";
 
-@Table
+@Table({
+  timestamps: false,
+})
 export class Employee extends Model {
+  @PrimaryKey
   @Column
   id!: number;
 
