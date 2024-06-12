@@ -18,9 +18,11 @@ services:
       retries: 5
   express:
     build: .
-    command: sh -c "npx sequelize-cli db:migrate && npm start"
+    command: sh -c "npx sequelize-cli db:migrate && node ./dist/app.js"
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
+    restart: always
     ports:
       - "3000:3000"
     environment:
@@ -28,6 +30,7 @@ services:
       SEQUELIZE_DB_USERNAME: employee_admin
       SEQUELIZE_DB_PASSWORD: mypass
       SEQUELIZE_DB_DATABASE: employee_sequelize
+      SEQUELISE_DB_PORT: 5432
 
 volumes:
   postgres_data:
