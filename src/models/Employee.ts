@@ -1,8 +1,13 @@
-import { Model, Column, Table, PrimaryKey } from "sequelize-typescript";
+import {
+  Model,
+  Column,
+  Table,
+  PrimaryKey,
+  CreatedAt,
+  UpdatedAt,
+} from "sequelize-typescript";
 
-@Table({
-  timestamps: false,
-})
+@Table
 export class Employee extends Model {
   @PrimaryKey
   @Column
@@ -16,4 +21,10 @@ export class Employee extends Model {
 
   @Column
   department!: string;
+
+  @CreatedAt
+  createdAt!: Date;
+
+  @UpdatedAt
+  updatedAt!: Date;
 }
