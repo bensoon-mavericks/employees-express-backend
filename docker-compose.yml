@@ -1,0 +1,33 @@
+version: "3"
+
+services:
+  postgres:
+    image: postgres:latest
+    environment:
+      POSTGRES_USER: employee_admin
+      POSTGRES_PASSWORD: mypass
+      POSTGRES_DB: employee_sequelize
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+  express:
+    build: .
+    command: sh -c "npx sequelize-cli db:migrate && npm start"
+    depends_on:
+      - postgres
+    ports:
+      - "3000:3000"
+    environment:
+      SEQUELIZE_DB_HOST: postgres
+      SEQUELIZE_DB_USERNAME: employee_admin
+      SEQUELIZE_DB_PASSWORD: mypass
+      SEQUELIZE_DB_DATABASE: employee_sequelize
+
+volumes:
+  postgres_data:
